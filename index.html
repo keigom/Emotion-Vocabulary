@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja"> <!-- Set the language attribute to Japanese -->
+<head>
+    <meta charset="UTF-8"> <!-- Ensure the document uses UTF-8 encoding -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Vocabulary Mapper</title>
+    <style>
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; /* Add fonts that support Japanese characters */
+        }
+        #emotionPlane {
+            width: 320px;
+            height: 320px;
+            background-color: #f5f5f5;
+            border: 1px solid #000;
+            position: relative;
+            padding: 10px;
+            overflow: hidden;
+            border-radius: 50%; /* Make the plane circular */
+        }
+        .crosses {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0; /* Ensure the crosses are below axes and labels */
+        }
+        .cross {
+            width: 5px;
+            height: 5px;
+            background-color: red;
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+        .axis {
+            position: absolute;
+            background-color: #000;
+            z-index: 1; /* Ensure axes and labels are above the cross */
+        }
+        .label {
+            position: absolute;
+            z-index: 1; /* Ensure axes and labels are above the cross */
+        }
+    </style>
+</head>
+<body>
+    <label for="emotion">感情語彙:</label>
+    <input type="text" id="emotion" name="emotion" required>
+
+    <h3>平面をクリックして感情価と覚醒度を設定:</h3>
+    <div id="emotionPlane">
+        <div class="crosses"></div> <!-- Container for the crosses -->
+        <!-- X Axis -->
+        <div class="axis" style="left: 0; bottom: 50%; width: 100%; height: 1px;"></div>
+        <span class="label" style="left: 0; bottom: 44%;">不快</span>
+        <span class="label" style="right: 0; bottom: 44%;">快</span>
+
+        <!-- Y Axis -->
+        <div class="axis" style="top: 0; left: 50%; height: 100%; width: 1px;"></div>
+        <span class="label" style="top: 0; left: 52%;">覚醒</span>
+        <span class="label" style="bottom: 0; left: 52%;">睡眠</span>
+    </div>
+    <p>感情価: <span id="pleasantnessValue">0</span></p>
+    <p>覚醒度: <span id="arousalValue">0</span></p>
+
+    <button id="addEmotion">Add Emotion</button>
+
+    <h3>登録された感情語彙: <span id="emotionCount">0</span></h3>
+    <ul id="emotionList"></ul>
+
+    <button id="exportCsv">Export CSV</button>
+
+    <script>
+        let data = [];
+
+        const emotionPlane = document.getElementById('emotionPlane');
+        const crossesContainer = emotionPlane.querySelector('.crosses');  // Get the crosses container
+        const pleasantnessSpan = document.getElementById('pleasantnessValue');
+        const arousalSpan = document.getElementById('arousalValue');
+
+        emotionPlane.addEventListener('click', function(event) {
+            const rect = emotionPlane.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const pleasantness = Math.round(((x / rect.width) - 0.5) * 20);
+            const arousal = Math.round(((y / rect.height) - 0.5) * -20);  // Inverted to make top more arousing
+
+            pleasantnessSpan.textContent = pleasantness;
+            arousalSpan.textContent = arousal;
+
+            // Clear previous crosses and add new one
+            crossesContainer.innerHTML = ''; // Clear only crosses, not the entire plane content
+            const cross = document.createElement('div');
+            cross.className = 'cross';
+            cross.style.left = x + 'px';
+            cross.style.top = y + 'px';
+            crossesContainer.appendChild(cross);  // Add the cross to the crosses container
+        });
+        
+        document.getElementById('addEmotion').addEventListener('click', function() {
+            const emotion = document.getElementById('emotion').value;
+            const pleasantness = pleasantnessSpan.textContent;
+            const arousal = arousalSpan.textContent;
+            if (emotion === '') return;
+            data.push({
+                emotion: emotion,
+                pleasantness: parseInt(pleasantness, 10),
+                arousal: parseInt(arousal, 10)
+            });
+            // Add to the display list
+            const li = document.createElement("li");
+            li.textContent = emotion;
+            //li.textContent = `${emotion} (Pleasantness: ${pleasantness}, Arousal: ${arousal})`;
+            document.getElementById('emotionList').appendChild(li);
+            // Clear the emotion input
+            document.getElementById('emotion').value = '';
+             // Remove the red dot (cross) from the 2D plane
+            const crossesContainer = emotionPlane.querySelector('.crosses');
+            crossesContainer.innerHTML = '';
+
+            // Update the emotion count
+            const countSpan = document.getElementById('emotionCount');
+            countSpan.textContent = data.length;
+        });
+
+        document.getElementById('exportCsv').addEventListener('click', function() {
+            var userId = generateStringRandomly();
+            let csvContent = "Emotion,Pleasantness,Arousal\n";
+            
+            data.forEach(function(rowArray) {
+                let row = rowArray.emotion + "," + rowArray.pleasantness + "," + rowArray.arousal;
+                csvContent += row + "\n";
+            });
+
+            // Create a Blob with the CSV content and BOM
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "emotion_vocabulary" + userId + ".csv");
+            document.body.appendChild(link);
+            link.click();
+
+            // Release the object URL after clicking
+            setTimeout(() => {
+            URL.revokeObjectURL(url);
+            link.remove();
+            }, 100);
+        });
+
+        function generateStringRandomly() {
+            var l = 6;
+            // 生成する文字列に含める文字セット
+            var c = "abcdefghijklmnopqrstuvwxyz0123456789";
+            var cl = c.length;
+            var r = "_";
+            for (var i = 0; i < l; i++) {
+                r += c[Math.floor(Math.random() * cl)];
+            }
+            return r;
+        }
+
+
+
+    </script>
+</body>
+</html>
+
+
+
+
+
