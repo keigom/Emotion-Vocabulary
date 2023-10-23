@@ -1,18 +1,13 @@
-# Iowa Gambling Task
+# Emotion Vocabulary & Core Affect
 
-You can try Psychophysics experiments on the web.
+You can try Psychology experiments on the web.
 
-https://keigom.github.io/The_Iowa_Gambling_Task/
+https://keigom.github.io/Emotion-Vocabulary/
 
-The objective of the experiments is to estimate the 
+The purpose of the experiment is to clarify the correspondence between emotional words and core affect.
 
 ## Task
-There were 4 decks of cards (A, B, C, and D.)
-Participants had to choose several cards, one at the time.
-Each time they choose a card, they get feedback about winning and/or loosing some money.
-Participants did not know what each card would yield in advance (i.e., like a lottery.)
-Participants started with a "loan" of of $2000 and were told to make a profit.
+Enter a term related to an emotion and specify the emotional valence and arousal level of that emotion in a two-dimensional plane.
 
 ## CSV values
-Deck, Result, Total Profit
-Block, Net Score
+Vocabulary, Arousal Level, Emotion Valence
